@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Use Viewer to start building new applications or easily embed Cesium into existing applications.">
+    <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
+	
+    <title>GSMA</title>	
+	
+    <link rel="stylesheet" href="../ThirdParty/font-awesome-4.6.3/css/font-awesome.min.css">
+	<link href="../ThirdParty/novus-nvd3/nv.d3.css" rel="stylesheet" type="text/css">
+	<script type="text/javascript" src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.17/d3.min.js" charset="utf-8"></script>
+	<script src="../ThirdParty/novus-nvd3/nv.d3.js"></script>
+    <script type="text/javascript" src="Sandcastle/Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../ThirdParty/requirejs-2.1.20/require.js"></script>
+	   <script type="text/javascript">
+        var pathToDwrServlet = 'https://sofia2.com/sib/dwr';
+    </script>
+    <script type='text/javascript'
+        src='https://sofia2.com/sib/dwr/engine.js'></script>
+    <script type='text/javascript' src='https://sofia2.com/sib/dwr/util.js'></script>
+    <script type='text/javascript'
+        src='https://sofia2.com/sib/dwr/interface/GatewayDWR.js'></script>
+
+    <script type='text/javascript'
+        src="https://sofia2.com/console/resources/js/sofia2-api-js_v4.0.5.js"></script>
+
+	
+  <script type='text/javascript' src="datosGSMA/conexion/conexionAdministrador.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(Sandcastle/templates/bucket.css);
+    @import url(datosGSMA/css/sofia2.css);
+  
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+		overflow: auto;
+		max-height: 85%;
+		min-width: 246px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    #toolbar table tr {
+        transform: translateY(0);
+        transition: transform 0.4s ease-out;
+    }
+    #toolbar table tr.up {
+        transform: translateY(33px);
+        transition: none;
+    }
+    #toolbar table tr.down {
+        transform: translateY(-33px);
+        transition: none;
+    }
+	
+	.cesium-viewer-animationContainer{
+	display:none;
+	}
+	.cesium-viewer-bottom{
+	display:none;
+	}
+	ul,li{
+	list-style:none;
+	}
+	
+	
+	text
+            {
+                font: 12px sans-serif;
+            }
+        
+            #graficoTarta
+            {
+                display: block;
+                float: left;
+                height: 350px !important;
+                width: 350px !important;
+				margin-left: 20px;
+            }
+        
+            html, body
+            {
+                margin: 0px;
+                padding: 0px;
+                height: 100%;
+                width: 100%;
+            }
+        
+            .nvd3.nv-pie.nv-chart-donut2 .nv-pie-title
+            {
+                fill: gray;
+				
+            }
+        
+            
+	
+</style>
+<div id="cesiumContainer" class="fullSize" ></div>
+<div id="loadingOverlay"><i id ="faloadingOverlay" class="fa fa-spinner fa-pulse fa-3x fa-fw"></i><span class="sr-only">Cargando...</span></div>
+<div id="toolbar" ></div>
+
+	<div id="panelIzquierda" class="oculto" >
+	    <h3 style="margin-top: 0px;padding-top: 160px;">PUNTOS DE INTERES</h3>
+		<ul>
+		<li> <input type="checkbox" id="cboxParking" checked value="second_checkbox"> <label >PARKING</label></li>
+		<li> <input type="checkbox" id="cboxPlayas" checked value="second_checkbox"> <label >PLAYAS</label></li>
+		<li> <input type="checkbox" id="cboxMuseos" checked value="second_checkbox"> <label >MUSEOS</label></li>
+		</ul>
+		<h3>PLAZAS LIBRES</h3>
+		<svg id="graficoTarta" class="mypiechart"></svg>
+	</div>
+	<div id="panelInferior" class="oculto">
+	<h3>OCUPACION PLAZAS PARKING</h3>
+	<div id="chartOcupacion" class='with-3d-shadow with-transitions'>
+		<svg style="height:200px;"></svg>
+	</div>
+	
+	
+	
+	
+	
+<script id="cesium_sandcastle_script">
+var dfdliad = new jQuery.Deferred();
+var chart;	
+function startup(Cesium) {
+    'use strict';
+    //carga los mapas
+        var imagerySources = Cesium.createDefaultImageryProviderViewModels();
+		imagerySources.splice(0,9);		
+    
+        var viewer = new Cesium.Viewer('cesiumContainer', {
+            imageryProviderViewModels : imagerySources,          
+            selectedImageryProviderViewModel : imagerySources[0],
+            geocoder:false,
+            homeButton:true,
+            navigationHelpButton:true,
+            scene3DOnly:false,
+            sceneModePicker:true,
+            vrButton:false
+		
+        }); 
+
+        var options = {
+            camera : viewer.scene.camera,
+            canvas : viewer.scene.canvas
+        };
+
+
+function representarInformacionPantalla(){ 
+          mostrarOffStreetParking_Destino(false);
+		  mostrarBeach(false);
+		  mostrarMuseum(false);
+		  pintarGraficos();
+	    		  
+        }
+
+	function mostrarOffStreetParking_Destino(efectoCamara){	
+		var value;	
+		for(var i=0; i < viewer.dataSources.length; i++){
+			value = viewer.dataSources.get(i);
+			if(value instanceof Cesium.CzmlDataSource && value.name == "destino"){		
+			value.entities.removeAll();
+			}
+		}	
+		var entidades = crearOffStreetParking_Destino();
+		if(entidades){
+						
+		var parkingEn = Cesium.CzmlDataSource.load(entidades);
+		viewer.dataSources.add(parkingEn);
+		if(efectoCamara){
+			viewer.flyTo(parkingEn);
+		}	
+		}		
+	}	
+		
+			
+	function crearOffStreetParking_Destino(){
+	var entidades ;	
+			entidades=[{"id" : "document","name" : "destino","version" : "1.0"}] ;		
+			
+				var imagen = "datosGSMA/imagenes/parkinico.png";
+		for(var i =0 ;i< datosGSMA_OffStreetParking_Destino.length;i++){
+		var ent = {    "id":"offStreetParking"+i, 
+							"name":datosGSMA_OffStreetParking_Destino[i].name,
+							"description":"<style>#mensajesTweets {font-size: 13px;    padding-top: 4px;    -webkit-box-shadow: -8px 7px 3px -4px rgba(0,0,0,0.8);   -moz-box-shadow: -8px 7px 3px -4px rgba(0,0,0,0.8);    box-shadow: -8px 7px 3px -4px rgb(94, 169, 221);    background: rgba(94, 169, 221, 0.6);    padding-bottom: 4px;    padding-left: 23px;}</style><div id='mensajesTweets'><table><tr><td valign='top'>Categoría: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].category.toString()+"</td></tr><tr><td valign='top'>Tipo de Carga: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].chargeType.toString()+"</td></tr><tr><td valign='top'>Permiso Requerido: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].requiredPermit.toString()+"</td></tr><tr><td valign='top'>Vehículos Permitidos: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].allowedVehicleType.toString()+"</td></tr><td valign='top'>Número Total Plazas : </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].totalSpotNumber+"</td></tr><td valign='top'> Plazas Disponibles: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].availableSpotNumber+"</td></tr><td valign='top'> Horario: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].openingHours+"</td></tr><td valign='top'>Tipo Pagos Permitidos: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].acceptedPaymentMethod+"</td></tr><td valign='top'> Proveedor: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].provider+"</td></tr><td valign='top'> Teléfono: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].contactPoint+"</td></tr><td valign='top'> Tipo Detección Ocupación: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].occupancyDetectionType.toString()+"</td></tr><tr><td valign='top'>Dirección: </td><td valign='top'>"+datosGSMA_OffStreetParking_Destino[i].address.streetAddress+", "+datosGSMA_OffStreetParking_Destino[i].address.addressLocality+", "+datosGSMA_OffStreetParking_Destino[i].address.addressCountry+"</td></tr></table></div>", 
+							"position": {
+								"cartographicDegrees": [                  
+									datosGSMA_OffStreetParking_Destino[i].location.coordinates[0], datosGSMA_OffStreetParking_Destino[i].location.coordinates[1], 0
+								]
+							},
+							"billboard": {
+								"color": {
+									"rgba": [
+										255,255,255,255
+									]
+								}, 
+								
+								"horizontalOrigin":"CENTER",
+								"image":imagen,
+								"scale":0.1,      
+								"verticalOrigin":"CENTER", 
+								"show": true
+							}
+						};
+
+		entidades.push(ent);
+		}		
+		return entidades;
+	}	
+
+function mostrarBeach(efectoCamara){
+
+	var value;	
+	for(var i=0; i < viewer.dataSources.length; i++){
+		value = viewer.dataSources.get(i);
+		if(value instanceof Cesium.CzmlDataSource && value.name == "beach"){			
+		value.entities.removeAll();
+		}
+	}
+
+	var entidades = crearBeach();
+	if(entidades){
+	var playasEn = Cesium.CzmlDataSource.load(entidades);
+		viewer.dataSources.add(playasEn);
+		if(efectoCamara){
+			viewer.flyTo(playasEn);
+		}
+	}		
+}	
+		
+			
+function crearBeach(){
+	var entidades ;
+		entidades=[{"id" : "document","name" : "beach","version" : "1.0"}] ;		
+		
+			var imagen = "datosGSMA/imagenes/playaico.png";
+	for(var i =0 ;i< datosGSMA_PointOfInterest_Beach.length;i++){
+	var descripcion='';
+	if(typeof datosGSMA_PointOfInterest_Beach[i].description !=="undefined"){
+		descripcion=datosGSMA_PointOfInterest_Beach[i].description;
+	}		
+	var ent = {"id":"offStreetParking"+i, 
+						"name":datosGSMA_PointOfInterest_Beach[i].name,
+						"description":"<style>#mensajesTweets {font-size: 13px;    padding-top: 4px;    -webkit-box-shadow: -8px 7px 3px -4px rgba(0,0,0,0.8);   -moz-box-shadow: -8px 7px 3px -4px rgba(0,0,0,0.8);    box-shadow: -8px 7px 3px -4px rgb(94, 169, 221);    background: rgba(94, 169, 221, 0.6);    padding-bottom: 4px;    padding-left: 23px;}</style><div id='mensajesTweets'><table><tr><td valign='top'>Descripción: </td><td valign='top'>"+descripcion+"</td></tr><tr><td valign='top'>Dirección:</td><td valign='top'>"+datosGSMA_PointOfInterest_Beach[i].address.addressLocality+"</td></tr><tr><td valign='top'>Ancho: </td><td valign='top'>"+datosGSMA_PointOfInterest_Beach[i].width+"</td></tr><tr><td valign='top'>Longitud: </td><td valign='top'>"+datosGSMA_PointOfInterest_Beach[i].beachLength+"</td></tr><tr><td valign='top'>Tipo Playa: </td><td valign='top'>"+datosGSMA_PointOfInterest_Beach[i].beachType.toString()+"</td></tr><tr><td valign='top'>Fuentes: </td><td valign='top'>"+datosGSMA_PointOfInterest_Beach[i].source+"</td></tr></table></div>", 
+						"position": {
+							"cartographicDegrees": [                  
+								datosGSMA_PointOfInterest_Beach[i].location.coordinates[0], datosGSMA_PointOfInterest_Beach[i].location.coordinates[1], 0
+							]
+						},
+						"billboard": {
+							"color": {
+								"rgba": [
+									255,255,255,255
+								]
+							},
+							"horizontalOrigin":"CENTER",
+							"image":imagen,
+							"scale":0.1,      
+							"verticalOrigin":"CENTER", 
+							"show": true
+						}
+					};
+
+	entidades.push(ent);
+	}		
+	return entidades;
+}	
+
+function mostrarMuseum(efectoCamara){
+//creo entradas nuevas
+	var value;	
+	for(var i=0; i < viewer.dataSources.length; i++){
+		value = viewer.dataSources.get(i);
+		if(value instanceof Cesium.CzmlDataSource && value.name == "museum"){
+		
+		value.entities.removeAll();
+		}
+	}
+
+	var entidades = crearMuseum();
+		var museumEn = Cesium.CzmlDataSource.load(entidades);
+		viewer.dataSources.add(museumEn);
+		if(efectoCamara){
+			viewer.flyTo(museumEn);
+		}
+}	
+		
+			
+function crearMuseum(){
+	var entidades ;
+	
+
+		entidades=[{"id" : "document","name" : "museum","version" : "1.0"}] ;		
+		
+			var imagen = "datosGSMA/imagenes/museum.png";
+	for(var i =0 ;i< datosGSMA_PointOfInterest_Museum.length;i++){
+	var horarios="<tr><td valign='center'>Horario:</td></tr>";
+	if(typeof datosGSMA_PointOfInterest_Museum[i].openingHoursSpecification !== "undefined"){
+		for(var j=0;j<datosGSMA_PointOfInterest_Museum[i].openingHoursSpecification.length;j++){
+		horarios=horarios+"<tr><td valign='top' align='center' style='width: 33%;'>Días</td><td valign='top' align='center' style='width: 33%;'>Apertura</td><td valign='top' align='center' style='width: 33%;'>Cierre</td></tr><tr><td valign='top' align='center' style='width: 33%;'>"+datosGSMA_PointOfInterest_Museum[i].openingHoursSpecification[j].dayOfWeek+"</td><td valign='top' align='center' style='width: 33%;'>"+datosGSMA_PointOfInterest_Museum[i].openingHoursSpecification[j].opens+"</td><td valign='top' align='center' style='width: 33%;'>"+datosGSMA_PointOfInterest_Museum[i].openingHoursSpecification[j].closes+"</td></tr>"
+		}
+	}
+	
+	var ent = {
+						"id":"offStreetParking"+i, 
+						"name":datosGSMA_PointOfInterest_Museum[i].name+', '+datosGSMA_PointOfInterest_Museum[i].alternateName,
+						"description":"<style>#mensajesTweets {font-size: 13px;    padding-top: 4px;    -webkit-box-shadow: -8px 7px 3px -4px rgba(0,0,0,0.8);   -moz-box-shadow: -8px 7px 3px -4px rgba(0,0,0,0.8);    box-shadow: -8px 7px 3px -4px rgb(94, 169, 221);    background: rgba(94, 169, 221, 0.6);    padding-bottom: 4px;    padding-left: 23px;}</style>	<div id='mensajesTweets'><table><tr><td valign='top'>Descripción: </td><td valign='top'>"+datosGSMA_PointOfInterest_Museum[i].description+"</td></tr><tr><td valign='top'>Dirección:</td><td valign='top'>"+datosGSMA_PointOfInterest_Museum[i].address.streetAddress+"</td></tr><tr><td valign='top'>Telefono: </td><td valign='top'>"+datosGSMA_PointOfInterest_Museum[i].contactPoint+"</td></tr><tr><td valign='top'>Fuentes: </td><td valign='top'>"+datosGSMA_PointOfInterest_Museum[i].source+"</td></tr>"+horarios+"</table></div>", 
+						"position": {
+							"cartographicDegrees": [                  
+								datosGSMA_PointOfInterest_Museum[i].location.coordinates[1], datosGSMA_PointOfInterest_Museum[i].location.coordinates[0], 0
+							]
+						},
+						"billboard": {
+							"color": {
+								"rgba": [
+									255,255,255,255
+								]
+							},
+							"horizontalOrigin":"CENTER",
+							"image":imagen,
+							"scale":0.1,      
+							"verticalOrigin":"CENTER", 
+							"show": true
+						}
+					};
+
+	entidades.push(ent);
+	}		
+	return entidades;
+}	
+
+		//elimina evento para mostrar la camara
+		viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+		
+		viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+		//manejador evento selección ruta en el mapa
+		var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+		handler.setInputAction(
+			//evento LEFT_CLICK
+			function (click){	
+				//pickedObject obtiene propiedades del elemento seleccionado
+				var pickedObject = viewer.scene.pick(click.position);				
+				if (Cesium.defined(pickedObject)) {
+						viewer.selectedEntity = pickedObject.id;			
+					} 
+				 			
+				
+			}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+	
+	//Listener mostrar ocultar Parking	
+	var evcboxParking =  document.getElementById('cboxParking');
+    evcboxParking.addEventListener('change', function() {
+		if(this.checked) {
+			mostrarOffStreetParking_Destino(true);
+			$("#panelInferior").removeClass("oculto");
+			$("#panelInferior").animate({bottom: '0%'},1000);
+		}else{
+		var value;	
+		for(var i=0; i < viewer.dataSources.length; i++){
+			value = viewer.dataSources.get(i);
+			if(value instanceof Cesium.CzmlDataSource && value.name == "destino"){
+			
+			value.entities.removeAll();
+			$("#panelInferior").addClass("oculto");
+			$("#panelInferior").animate({bottom: '-250px'},1000);
+			viewer.camera.flyTo({destination : Cesium.Cartesian3.fromDegrees(-5.0000105, 40.000932, 1440000.0)});
+			}
+		}
+		}
+		
+	});
+	
+	
+	//Listener mostrar ocultar Playa	
+	var evcboxPlaya =  document.getElementById('cboxPlayas');
+    evcboxPlaya.addEventListener('change', function() {
+		if(this.checked) {
+			mostrarBeach(true);
+		}else{
+		var value;	
+		for(var i=0; i < viewer.dataSources.length; i++){
+			value = viewer.dataSources.get(i);
+			if(value instanceof Cesium.CzmlDataSource && value.name == "beach"){			
+			value.entities.removeAll();
+			viewer.camera.flyTo({destination : Cesium.Cartesian3.fromDegrees(-5.0000105, 40.000932, 1440000.0)});
+			}
+		}
+		}
+		
+	});
+	
+	
+	//Listener mostrar ocultar Museos	
+	var evcboxMuseos =  document.getElementById('cboxMuseos');
+    evcboxMuseos.addEventListener('change', function() {
+		if(this.checked) {
+			mostrarMuseum(true);
+		}else{
+		var value;	
+		for(var i=0; i < viewer.dataSources.length; i++){
+			value = viewer.dataSources.get(i);
+			if(value instanceof Cesium.CzmlDataSource && value.name == "museum"){
+			
+			value.entities.removeAll();
+			viewer.camera.flyTo({destination : Cesium.Cartesian3.fromDegrees(-5.0000105, 40.000932, 1440000.0)});
+			}
+		}
+		}
+		
+	});
+	
+	
+    Sandcastle.reset = function() {
+            
+            conectarSIBConToken();
+            dfdliad.then(function(  ) { representarInformacionPantalla();  });
+        
+        };      
+
+//FIN FUNCIONES CAMARA--------------------------------------------------------- 
+ 
+ var rectangle = Cesium.Rectangle.fromDegrees(-9.7130105, 35.352932, -1.0830194, 44.3986509);
+
+ viewer.camera.flyTo({destination : Cesium.Cartesian3.fromDegrees(-5.0000105, 40.000932, 1440000.0)});
+	
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+
+    Sandcastle.finishedLoading();
+	viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_CLICK);
+		
+	viewer.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+	
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+$(document).ready(function(){
+			//Al cargar mostramos los menus			
+				$("#panelIzquierda").removeClass("oculto");
+				$("#panelIzquierda").animate({left: '0%'},1000);
+				$("#panelInferior").removeClass("oculto");
+				$("#panelInferior").animate({bottom: '0%'},1000);
+			
+});
+
+
+	function pintarGraficos(){
+	 nv.addGraph({
+        generate: function() {
+            var width = $('#panelInferior').width(),
+                height =240;
+             chart = nv.models.multiBarChart()
+                .width(width)
+                .height(height)
+                .stacked(true).showXAxis(false) 
+                ;
+
+       
+            chart.dispatch.on('renderEnd', function(){
+                console.log('Render Complete');
+            });
+			
+            var svg = d3.select('#chartOcupacion svg').datum(cargarGrafico());
+            console.log('calling chart');
+            svg.transition().duration(0).call(chart);
+
+            return chart;
+        },
+        callback: function(graph) {
+            nv.utils.windowResize(function() {
+                var width = nv.utils.windowSize().width;
+                var height = 240;
+                graph.width(width).height(height);
+
+                d3.select('#chartOcupacion svg')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .transition().duration(0)
+                    .call(graph);
+
+            });
+        }
+    });
+		
+    $(window).resize(function(){
+			chart.width($('#tartaLibres').width());
+			chart.height( 240);
+			chart.update();
+		});
+		  
+		var pie
+		 nv.addGraph(function () {
+             pie = nv.models.pieChart()
+            .x(function (d) { return d.key })
+            .y(function (d) { return d.y })
+            .donut(true)
+            .width(200)
+            .height(300)
+			.arcsRadius(profundidadPie())
+			.labelsOutside(true)
+			.labelSunbeamLayout(true)
+            .id('donut2');
+
+            d3.select("#graficoTarta")
+            .datum(cargarPie())
+            .transition().duration(1200)
+            .attr('width', 200)
+            .attr('height', 300)
+            .call(pie);
+
+            return pie;
+
+        });	  
+	
+	}
+	
+	
+	function redondearFecha(fecha){	
+		var resul = fecha.substring(0,fecha.length-7);
+		resul=resul+"00.000Z"
+		return resul;
+	}
+	
+	function cargarGrafico(){
+		var datosG=[];		
+		for(var i=0; i < datosparking.length; i++){		
+		var data=[];
+		for(var j=0; j < datosparking[i].length; j++){
+			var valorX = redondearFecha(datosparking[i][j].contextData.timestamp.$date);
+			var odata = {x:valorX,y:datosparking[i][j].availableSpotNumber};
+			data.push(odata);
+		}		
+		var obj ={ key: datosparking[i][0].name.substring(13,datosparking[i][0].name.length),
+				nonStackable: false,
+				values: data}		
+		datosG.push(obj);
+		}
+	return datosG;
+	}
+	
+	function cargarPie(){
+		var datPie=[];
+		for(var i=0; i < datosGSMA_OffStreetParking_Destino.length; i++){	
+			var obj={ key: datosGSMA_OffStreetParking_Destino[i].name.substring(13,datosGSMA_OffStreetParking_Destino[i].name.length), y:datosGSMA_OffStreetParking_Destino[i].totalSpotNumber  };
+			datPie.push(obj);
+		}		
+		return datPie;
+	}
+	
+	function profundidadPie(){	
+		var deep=[];
+		for(var i=0; i < datosGSMA_OffStreetParking_Destino.length; i++){
+			deep.push({ inner: Number(datosGSMA_OffStreetParking_Destino[i].totalSpotNumber)/1000, outer: 1 })
+			}
+			
+		return  deep;
+		}
+
+</script>
+</body>
+</html>

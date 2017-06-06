@@ -1,0 +1,220 @@
+ 
+/*-------------Generales---------------------*/   
+
+   #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+		overflow: auto;
+		max-height: 85%;
+		min-width: 246px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    #toolbar table tr {
+        transform: translateY(0);
+        transition: transform 0.4s ease-out;
+    }
+    #toolbar table tr.up {
+        transform: translateY(33px);
+        transition: none;
+    }
+    #toolbar table tr.down {
+        transform: translateY(-33px);
+        transition: none;
+    }
+	
+	
+	#sliderTiempo{ 
+	width: 90%;
+    position: absolute;
+    bottom: 31px;
+    right: 5%;
+	display:none;
+	}
+	
+	.cesium-viewer-bottom{
+	display:none;
+	}
+	ul,li{
+	list-style:none;
+	 cursor: pointer;
+	 cursor: hand; 
+	}
+	.ui-rangeSlider-bar {
+		background: #48555E;
+	}
+	
+	.cesium-viewer-timelineContainer{
+	    width: 90%;
+		right: 5% !important;
+		left: 5% !important;
+			display:none;
+	}
+	.cesium-viewer-fullscreenContainer{
+		
+		display:none !important;
+	}
+	
+	
+	#loadingOverlay{		
+		background-image:url("../imagenes/home04.jpg");
+		background-size: cover;
+	}
+	#faloadingOverlay{
+		margin-right: 50%;
+		margin-left: 50%;
+		margin-top: 30%;
+		font-size: -webkit-xxx-large;
+	}
+	#toolbar{
+		display:none;
+	}
+	text {
+		font: 12px sans-serif;
+	}
+
+	svg {
+		display: block;
+		float: left;
+	}
+
+
+
+	html, body {
+		margin: 0px;
+		padding: 0px;
+		height: 100%;
+		width: 100%;
+	}
+	svg text {
+		fill: white;
+	}
+
+		
+		
+
+.cesium-viewer-fullscreenContainer {
+    position: absolute;
+    top: 7px;
+    right: 4px;
+    padding: 0;
+    width: 31px;
+    height: 32px;
+    overflow: hidden;
+}
+
+.cesium-viewer-geocoderContainer {
+    position: relative;
+    display: inline-block;
+    margin: 0 3px;
+	right: 74px;
+}
+
+
+
+button.cesium-infoBox-camera {
+    display: none;
+}
+		
+/*-------------fin Generales---------------------*/  		
+/*-------------donuts---------------------*/  
+		
+	.nvd3.nv-pie.nv-chart-donut2 .nv-pie-title {
+		fill: rgba(70, 107, 168, 0.78);
+	}
+	
+/*-------------fin donuts---------------------*/  
+	
+	
+	
+/*-------------panelInferior  ---------------------*/  		
+#panelInferior{
+	position: absolute;		
+	width: 100%;	
+	height: 250px;
+	bottom: -250px;
+	background-color:rgba(0, 0, 0, 0.8)
+}
+	
+/*-------------panelInferior fin ---------------------*/  			
+	
+	
+	
+
+	
+	
+	
+	
+
+
+	
+ 
+		
+/*-------- panel izquierda --------------*/	
+
+#tartaLibres{
+	height: 270px !important;
+    width: 276px !important;
+    position: absolute;
+    left: 4px !important;
+}
+ 
+
+
+#panelIzquierda{
+	position: absolute;    
+    width: 270px;
+    height: calc(100% - 268px);
+   
+	left:-290px;
+    background-color: rgba(0, 0, 0, 0.8);
+    
+    padding: 9px;
+	}
+	
+ul li ul {
+    display: none;
+} 
+
+
+/*--------fin  panel izquierda --------------*/	
+
+	
+
+
+/*---panel inferior cortado--*/
+@media (max-height: 800px) {
+#panelInferior{
+	position: absolute;
+
+	width: calc(100% - 288px);
+    left: 288px;
+	height: 250px;
+	bottom:-250px;
+	background-color:rgba(0, 0, 0, 0.8)
+}	
+
+
+#panelIzquierda{
+	position: absolute;    
+    width: 270px;
+    height: 100%;   
+	left:-290px;
+    background-color: rgba(0, 0, 0, 0.8);    
+    padding: 9px;
+	}
+	
+
+
+}
+
+/*---panel inferior cortado--*/
+
+@media (min-width: 768px) {
+	
+}
+
